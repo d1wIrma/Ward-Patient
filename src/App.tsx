@@ -8,7 +8,7 @@ import {
   Users, UserPlus, Heart, ClipboardCheck, AlertTriangle, 
   Clock, Ruler, Weight, ShieldAlert, BadgeInfo, CheckCircle, 
   ChevronRight, Search, Activity, RotateCcw, Calendar, CheckSquare, ListPlus,
-  RefreshCw, Info, Lock, Loader2
+  RefreshCw, Info, Lock, Loader2, Settings
 } from 'lucide-react';
 import { Patient, VitalReading, PressureCheck, BradenAssessment, FRATAssessment } from './types';
 import { initialPatients, checkVitalsAbnormal, getRelativeTime, calculateNZEWS } from './initialData';
@@ -36,6 +36,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'critical_vitals' | 'overdue_skin' | 'high_fall_risk'>('all');
   const [appVersion, setAppVersion] = useState<'current' | 'legacy'>('current');
+  const [showVersionControls, setShowVersionControls] = useState(false);
   
   // Real-time tick state for pressure care evaluation (recalculates every 5 seconds)
   const [currentTime, setCurrentTime] = useState(new Date('2026-06-07T06:54:35Z'));
@@ -1490,41 +1491,65 @@ export default function App() {
       </div>
 
       {/* VERCEL VERSION DEPLOYMENT CONTROLLERS */}
-      <div className="fixed bottom-16 left-6 z-45 bg-slate-900/95 backdrop-blur-md border border-slate-750 text-white p-3.5 rounded-xl shadow-2xl flex flex-col gap-2 max-w-[210px] sm:max-w-xs transition-all duration-300 transform scale-100 hover:scale-[1.02]">
-        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
-          <RefreshCw className="h-4 w-4 text-sky-400 animate-spin shrink-0" style={{ animationDuration: '6s' }} />
-          <div>
-            <div className="text-[9px] font-mono tracking-widest text-[#94A3B8] uppercase leading-none">Deployment Environment</div>
-            <div className="text-xs font-bold font-sans text-sky-300">Vercel: Active Preview</div>
+      <div className="fixed bottom-16 left-6 z-45 flex flex-col items-start gap-2">
+        {showVersionControls && (
+          <div className="bg-slate-900/95 backdrop-blur-md border border-slate-750 text-white p-3.5 rounded-xl shadow-2xl flex flex-col gap-2 w-48 sm:w-56 transition-all duration-300 animate-scaleIn">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-1.5">
+              <div className="flex items-center gap-1.5">
+                <RefreshCw className="h-3 w-3 text-sky-400 rotate-180 animate-spin" style={{ animationDuration: '4s' }} />
+                <span className="text-[9px] font-mono tracking-widest text-slate-400 uppercase leading-none">Deployment Framework</span>
+              </div>
+              <button 
+                onClick={() => setShowVersionControls(false)} 
+                className="text-slate-400 hover:text-white text-[10px] font-bold px-1 select-none"
+                title="Hide settings"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-1.5 pt-0.5">
+              <p className="text-[10px] text-slate-300 leading-tight font-medium">
+                Select active workflow layout:
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  onClick={() => {
+                    setAppVersion('legacy');
+                    setShowVersionControls(false);
+                  }}
+                  className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer text-center ${
+                    appVersion === 'legacy'
+                      ? 'bg-amber-500/25 border-amber-500 text-amber-300 font-extrabold shadow-sm'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                  }`}
+                >
+                  Old Version
+                </button>
+                <button
+                  onClick={() => {
+                    setAppVersion('current');
+                    setShowVersionControls(false);
+                  }}
+                  className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer text-center ${
+                    appVersion === 'current'
+                      ? 'bg-[#1D529E]/40 border-[#1D529E] text-blue-300 font-extrabold shadow-sm'
+                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+                  }`}
+                >
+                  New Version
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <div className="space-y-2 pt-0.5">
-          <p className="text-[10px] text-[#CBD5E1] leading-tight">
-            You are viewing the <strong className="text-white">Adelaide Metro</strong> version. Click below to toggle historical layout.
-          </p>
-          <div className="grid grid-cols-2 gap-1.5">
-            <button
-              onClick={() => setAppVersion('legacy')}
-              className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer ${
-                appVersion === 'legacy'
-                  ? 'bg-amber-500/20 border-amber-500 text-amber-305'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
-              }`}
-            >
-              Old Version
-            </button>
-            <button
-              onClick={() => setAppVersion('current')}
-              className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer ${
-                appVersion === 'current'
-                  ? 'bg-[#1D529E]/35 border-[#1D529E] text-blue-300'
-                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
-              }`}
-            >
-              New Version
-            </button>
-          </div>
-        </div>
+        )}
+
+        <button
+          onClick={() => setShowVersionControls(!showVersionControls)}
+          className="flex items-center gap-2 bg-slate-900/90 hover:bg-slate-950 border border-slate-700 hover:border-slate-500 text-white px-2.5 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider shadow-lg transition duration-200 active:scale-95 cursor-pointer select-none"
+        >
+          <Settings className={`h-3.5 w-3.5 text-slate-400 ${showVersionControls ? 'rotate-90 text-sky-400' : ''} transition-transform duration-200`} />
+          <span>Version: {appVersion === 'current' ? 'New' : 'Old'}</span>
+        </button>
       </div>
 
       {/* CLINICAL CORE INPUT MODALS */}
