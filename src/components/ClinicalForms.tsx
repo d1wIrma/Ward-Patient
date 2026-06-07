@@ -762,92 +762,218 @@ export function LogPressureForm({ onLog, onCancel, isProcessing = false }: LogPr
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                
                {/* Sensory Perception */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Sensory Perception</label>
-                 <select
-                   value={sensory}
-                   onChange={(e) => setSensory(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Completely Limited (Unresponsive to pain stimuli)</option>
-                   <option value={2}>2: Very Limited (Responds only to painful stimuli)</option>
-                   <option value={3}>3: Slightly Limited (Responds to verbal commands but can't always communicate)</option>
-                   <option value={4}>4: No Impairment (Responds to verbal commands normally)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Sensory Perception</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Completely Limited (Unresponsive to pain stimuli)' },
+                     { value: 2, label: '2: Very Limited (Responds only to painful stimuli)' },
+                     { value: 3, label: '3: Slightly Limited (Responds to verbal commands but can\'t always communicate)' },
+                     { value: 4, label: '4: No Impairment (Responds to verbal commands normally)' },
+                   ].map(opt => {
+                     const isSelected = sensory === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setSensory(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
                {/* Moisture */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Moisture exposure</label>
-                 <select
-                   value={moist}
-                   onChange={(e) => setMoist(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Constantly Moist (Perspiration, urine, drainage... always wet)</option>
-                   <option value={2}>2: Very Moist (Linen changes needed every 8h)</option>
-                   <option value={3}>3: Occasionally Moist (Linen changes needed every 12h)</option>
-                   <option value={4}>4: Rarely Moist (Linen changed every 24h)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Moisture exposure</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Constantly Moist (Perspiration, urine, drainage... always wet)' },
+                     { value: 2, label: '2: Very Moist (Linen changes needed every 8h)' },
+                     { value: 3, label: '3: Occasionally Moist (Linen changes needed every 12h)' },
+                     { value: 4, label: '4: Rarely Moist (Linen changed every 24h)' },
+                   ].map(opt => {
+                     const isSelected = moist === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setMoist(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
                {/* Activity */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Degree of Physical Activity</label>
-                 <select
-                   value={activity}
-                   onChange={(e) => setActivity(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Bedfast (Confined to bed completely)</option>
-                   <option value={2}>2: Chairfast (Severely limited walking, needs chair help)</option>
-                   <option value={3}>3: Walks Occasionally (Very short distance, spends most time in chair/bed)</option>
-                   <option value={4}>4: Walks Frequently (Walks outside room 2x during waking hours)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Degree of Physical Activity</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Bedfast (Confined to bed completely)' },
+                     { value: 2, label: '2: Chairfast (Severely limited walking, needs chair help)' },
+                     { value: 3, label: '3: Walks Occasionally (Very short distance, spends most time in chair/bed)' },
+                     { value: 4, label: '4: Walks Frequently (Walks outside room 2x during waking hours)' },
+                   ].map(opt => {
+                     const isSelected = activity === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setActivity(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
                {/* Mobility */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Ability to Change / Maintain Position</label>
-                 <select
-                   value={mobility}
-                   onChange={(e) => setMobility(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Completely Immobile (No changes made without help)</option>
-                   <option value={2}>2: Very Limited (Occasional slight changes but unable to turn self)</option>
-                   <option value={3}>3: Slightly Limited (Frequent slight changes independently)</option>
-                   <option value={4}>4: No Limitations (Major regular position changes alone)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Ability to Change / Maintain Position</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Completely Immobile (No changes made without help)' },
+                     { value: 2, label: '2: Very Limited (Occasional slight changes but unable to turn self)' },
+                     { value: 3, label: '3: Slightly Limited (Frequent slight changes independently)' },
+                     { value: 4, label: '4: No Limitations (Major regular position changes alone)' },
+                   ].map(opt => {
+                     const isSelected = mobility === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setMobility(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
                {/* Nutrition */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Nutritional Intake Pattern</label>
-                 <select
-                   value={nutrition}
-                   onChange={(e) => setNutrition(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Very Poor (NPO or clear fluids &gt; 5 days; never eats complete meal)</option>
-                   <option value={2}>2: Inadequate (Receives tube feeds/TPN with low values, eats &lt; half meal)</option>
-                   <option value={3}>3: Adequate (Eats half of most meals, gets 4 protein servings/day)</option>
-                   <option value={4}>4: Excellent (Eats most of every normal meal, refuses nothing)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Nutritional Intake Pattern</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Very Poor (NPO or clear fluids > 5 days; never eats complete meal)' },
+                     { value: 2, label: '2: Inadequate (Receives tube feeds/TPN with low values, eats < half meal)' },
+                     { value: 3, label: '3: Adequate (Eats half of most meals, gets 4 protein servings/day)' },
+                     { value: 4, label: '4: Excellent (Eats most of every normal meal, refuses nothing)' },
+                   ].map(opt => {
+                     const isSelected = nutrition === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setNutrition(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
                {/* Friction & Shear */}
-               <div>
-                 <label className="block text-[11px] font-bold text-slate-700 mb-1">Friction & Shear Risk</label>
-                 <select
-                   value={frictionShear}
-                   onChange={(e) => setFrictionShear(parseInt(e.target.value))}
-                   className="w-full text-[11px] border border-slate-300 rounded p-2 bg-slate-50"
-                 >
-                   <option value={1}>1: Problem (Mild-to-Max assistance for moving, constant rubbing)</option>
-                   <option value={2}>2: Potential Problem (Moves feebly, min assistance, sliding some)</option>
-                   <option value={3}>3: No Apparent Problem (Moves independently, sufficient strength to lift self)</option>
-                 </select>
+               <div className="space-y-1.5">
+                 <label className="block text-[11px] font-bold text-slate-700">Friction & Shear Risk</label>
+                 <div className="space-y-1">
+                   {[
+                     { value: 1, label: '1: Problem (Mild-to-Max assistance for moving, constant rubbing)' },
+                     { value: 2, label: '2: Potential Problem (Moves feebly, min assistance, sliding some)' },
+                     { value: 3, label: '3: No Apparent Problem (Moves independently, strength to lift self)' },
+                   ].map(opt => {
+                     const isSelected = frictionShear === opt.value;
+                     return (
+                       <button
+                         key={opt.value}
+                         type="button"
+                         onClick={() => setFrictionShear(opt.value)}
+                         className={`w-full flex items-center gap-2 p-1.5 rounded-lg border text-left transition select-none ${
+                           isSelected 
+                             ? 'bg-blue-50/70 border-[#1D529E] text-[#1D529E] font-bold shadow-sm' 
+                             : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                         }`}
+                       >
+                         <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0 transition ${
+                           isSelected 
+                             ? 'border-[#1D529E] bg-[#1D529E] text-white' 
+                             : 'border-slate-300 bg-white'
+                         }`}>
+                           {isSelected && <Check className="h-2.5 w-2.5 stroke-[3]" />}
+                         </div>
+                         <span className="text-[10px] leading-tight">{opt.label}</span>
+                       </button>
+                     );
+                   })}
+                 </div>
                </div>
 
              </div>
