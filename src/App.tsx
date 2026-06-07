@@ -35,6 +35,7 @@ export default function App() {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMode, setFilterMode] = useState<'all' | 'critical_vitals' | 'overdue_skin' | 'high_fall_risk'>('all');
+  const [appVersion, setAppVersion] = useState<'current' | 'legacy'>('current');
   
   // Real-time tick state for pressure care evaluation (recalculates every 5 seconds)
   const [currentTime, setCurrentTime] = useState(new Date('2026-06-07T06:54:35Z'));
@@ -382,17 +383,32 @@ export default function App() {
   return (
     <div id="ward-tracker-root" className="min-h-screen bg-slate-100/70 text-slate-850 flex flex-col font-sans selection:bg-[#1D529E] selection:text-white">
       
-      {/* DECENTRALIZED ADELAIDE METRO HEALTH SERVICE BRAND LAYER */}
+      {/* DECENTRALIZED ORGANISTIONAL BRAND LAYER */}
       <div id="sa-health-brand-bar" className="bg-white border-b border-slate-200 px-6 py-2.5 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            {/* Adelaide Metro Health Service emblem simulation */}
-            <div className="h-10 w-10 rounded-full border-2 border-[#1D529E] bg-slate-50 flex flex-col items-center justify-center shrink-0 relative overflow-hidden select-none">
-              <span className="text-[6px] font-black text-[#1D529E] text-center leading-none tracking-tight">AMHS</span>
-            </div>
-            <div>
-              <span className="text-lg font-black text-[#1D529E] tracking-tight block leading-none">Adelaide Metro Health Service</span>
-            </div>
+            {appVersion === 'current' ? (
+              <>
+                {/* Adelaide Metro Health Service emblem simulation */}
+                <div className="h-10 w-10 rounded-full border-2 border-[#1D529E] bg-slate-50 flex flex-col items-center justify-center shrink-0 relative overflow-hidden select-none">
+                  <span className="text-[6px] font-black text-[#1D529E] text-center leading-none tracking-tight">AMHS</span>
+                </div>
+                <div>
+                  <span className="text-lg font-black text-[#1D529E] tracking-tight block leading-none">Adelaide Metro Health Service</span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* South Australia crest emblem simulation */}
+                <div className="h-10 w-10 rounded-full border-2 border-[#1D529E] bg-slate-50 flex flex-col items-center justify-center shrink-0 relative overflow-hidden select-none">
+                  <span className="text-[6px] font-black text-[#1D529E] text-center leading-none tracking-tight">SA<br/>GOVT</span>
+                </div>
+                <div>
+                  <h1 className="text-[9px] font-extrabold uppercase tracking-widest text-slate-400 leading-tight">Government of South Australia</h1>
+                  <span className="text-lg font-black text-[#1D529E] tracking-tight block leading-none">SA Health</span>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-3 self-end sm:self-auto">
@@ -866,7 +882,7 @@ export default function App() {
                 <div id="fall-risk-hud" className="bg-white p-6 rounded-2xl border border-slate-200 flex flex-col justify-between gap-4 shadow-sm">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">Fall Risk Assessment</h3>
+                      <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500">{appVersion === 'current' ? 'Fall Risk Assessment' : 'Peninsula Health FRAT Assessment'}</h3>
                       <span className="text-[10px] font-mono text-slate-400">Clinical Falls Standard</span>
                     </div>
  
@@ -941,7 +957,7 @@ export default function App() {
                       className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-705 border border-slate-200 rounded-xl text-xs font-bold transition shadow-sm"
                     >
                       <ShieldAlert className="h-4 w-4 text-slate-505" />
-                      Perform Fall Risk Assessment
+                      {appVersion === 'current' ? 'Perform Fall Risk Assessment' : 'Perform Peninsula Health FRAT Audit'}
                     </button>
                   </div>
                 </div>
@@ -956,7 +972,7 @@ export default function App() {
                       Bedside Warnings: Abnormal Vitals Alert Present!
                     </span>
                     <p className="mb-2 text-slate-800 font-medium">
-                      One or more telemetry vitals cross the safety threshold guidelines of Adelaide Metro Health Service clinical ward reference ranges. Assure immediate physical skin checks and devices.
+                      One or more telemetry vitals cross the safety threshold guidelines of {appVersion === 'current' ? 'Adelaide Metro Health Service' : 'South Australian'} clinical ward reference ranges. Assure immediate physical skin checks and devices.
                     </p>
                     <div className="flex flex-wrap gap-1.5">
                       {activeAbnormalDetails.alerts.map((alItem, idx) => (
@@ -1083,6 +1099,17 @@ export default function App() {
                   </div>
 
                   <div className="p-6 space-y-6">
+                    {/* CRITICAL PROFESSIONAL CLINICAL DECISION DISCLAIMER BAR */}
+                    <div className="bg-amber-50/80 border-l-4 border-amber-500 p-4 rounded-xl flex items-start gap-3">
+                      <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="text-xs font-extrabold text-amber-900 uppercase tracking-tight">AI Clinical Guidance Notice</h4>
+                        <p className="text-[11px] text-amber-850 mt-1 leading-relaxed">
+                          All automated metrics, risk calculations, and compliance checklists generated here are <strong>suggestions for guidance only</strong>. True patient risk evaluations, observations, and care planning decisions <strong>must always be validated by qualified healthcare professionals</strong> in accordance with {appVersion === 'current' ? 'Adelaide Metro Health Service' : 'SA Health'} clinical policy.
+                        </p>
+                      </div>
+                    </div>
+
                     {/* Canterbury DHB Adult NZEWS Assistant */}
                     <div className="border border-slate-200 rounded-xl overflow-hidden">
                       <div className="bg-slate-50 px-4 py-3 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
@@ -1457,9 +1484,47 @@ export default function App() {
       </footer>
 
       {/* CLINICAL DISCLAIMER BAR */}
-      <div id="clinical-disclaimer-footer" className="fixed bottom-0 left-0 right-0 z-50 bg-yellow-400 text-slate-950 py-3.5 px-6 font-extrabold text-[11px] md:text-xs text-center flex items-center justify-center gap-2 border-t border-yellow-500 shadow-lg select-none tracking-wider">
+      <div id="clinical-disclaimer-footer" className="fixed bottom-0 left-0 right-0 z-50 bg-yellow-400 text-slate-950 py-3.5 px-6 font-extrabold text-[11px] md:text-xs text-center flex items-center justify-center gap-2 border-t border-yellow-500 shadow-lg select-none tracking-wider font-extrabold">
         <AlertTriangle className="h-4 w-4 shrink-0 text-slate-950 animate-pulse" />
-        <span>AI GENERATED CONTENT. NOT A MEDICAL DEVICE. FOR EDUCATIONAL USE ONLY.</span>
+        <span>AI ASSISTANCE IS FOR SUGGESTION ONLY. CLINICAL DECISIONS MUST BE BASED ON PROFESSIONAL CLINICAL JUDGEMENT.</span>
+      </div>
+
+      {/* VERCEL VERSION DEPLOYMENT CONTROLLERS */}
+      <div className="fixed bottom-16 left-6 z-45 bg-slate-900/95 backdrop-blur-md border border-slate-750 text-white p-3.5 rounded-xl shadow-2xl flex flex-col gap-2 max-w-[210px] sm:max-w-xs transition-all duration-300 transform scale-100 hover:scale-[1.02]">
+        <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+          <RefreshCw className="h-4 w-4 text-sky-400 animate-spin shrink-0" style={{ animationDuration: '6s' }} />
+          <div>
+            <div className="text-[9px] font-mono tracking-widest text-[#94A3B8] uppercase leading-none">Deployment Environment</div>
+            <div className="text-xs font-bold font-sans text-sky-300">Vercel: Active Preview</div>
+          </div>
+        </div>
+        <div className="space-y-2 pt-0.5">
+          <p className="text-[10px] text-[#CBD5E1] leading-tight">
+            You are viewing the <strong className="text-white">Adelaide Metro</strong> version. Click below to toggle historical layout.
+          </p>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => setAppVersion('legacy')}
+              className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer ${
+                appVersion === 'legacy'
+                  ? 'bg-amber-500/20 border-amber-500 text-amber-305'
+                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+              }`}
+            >
+              Old Version
+            </button>
+            <button
+              onClick={() => setAppVersion('current')}
+              className={`py-1.5 px-2 text-[9px] font-black uppercase tracking-wider rounded-md border transition cursor-pointer ${
+                appVersion === 'current'
+                  ? 'bg-[#1D529E]/35 border-[#1D529E] text-blue-300'
+                  : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-750'
+              }`}
+            >
+              New Version
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* CLINICAL CORE INPUT MODALS */}
@@ -1474,7 +1539,7 @@ export default function App() {
                   {activeModal === 'admit' && 'Admit New Patient'}
                   {activeModal === 'log_vitals' && `Log Bedside Vitals - ${activePatient?.name}`}
                   {activeModal === 'log_pressure' && `Skin Turn & Pressure Care - ${activePatient?.name}`}
-                  {activeModal === 'assess_fall' && 'Fall Risk Assessment'}
+                  {activeModal === 'assess_fall' && (appVersion === 'current' ? 'Fall Risk Assessment' : 'Peninsula Health FRAT Assessment')}
                   {activeModal === 'success' && 'Clinical Action Completed'}
                 </h3>
                 {activePatient && activeModal !== 'admit' && activeModal !== 'success' && (
