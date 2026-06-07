@@ -1,0 +1,6 @@
+{
+  "name": "Clinical Ward Patient Tracker",
+  "description": "A comprehensive clinical bedside tool for nurses to manage patient demographics, track vital trends, evaluate fall risk scores, and monitor pressure area care timing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
