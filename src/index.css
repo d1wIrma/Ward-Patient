@@ -50,3 +50,20 @@
   animation: boxRedFlash 1.4s infinite ease-in-out;
 }
 
+@keyframes boxAmberFlash {
+  0%, 100% {
+    background-color: rgba(254, 243, 199, 0.4); /* Very soft amber tint */
+    border-color: rgba(245, 158, 11, 0.5);
+    box-shadow: 0 0 0 0px rgba(245, 158, 11, 0);
+  }
+  50% {
+    background-color: rgba(254, 243, 199, 0.9); /* Deeper warm amber highlight */
+    border-color: rgba(217, 119, 6, 1);
+    box-shadow: 0 0 10px 3px rgba(245, 158, 11, 0.25);
+  }
+}
+
+.animate-box-amber-flash {
+  animation: boxAmberFlash 1.6s infinite ease-in-out;
+}
+

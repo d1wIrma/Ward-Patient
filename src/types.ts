@@ -12,7 +12,23 @@ export interface VitalReading {
   temperature: number; // °C
   respiratoryRate: number; // breaths/min
   spo2: number; // %
+  supplementalO2: boolean; // Yes/No
+  levelOfConsciousness: 'A' | 'V' | 'P' | 'U'; // AVPU (Alert, Voice, Pain, Unresponsive)
+  nzewsScore?: number;
+  nzewsZone?: 'GREEN' | 'YELLOW' | 'ORANGE' | 'RED' | 'BLUE';
   nurseInitials: string;
+}
+
+export interface BradenAssessment {
+  sensory: number; // 1-4
+  moist: number; // 1-4
+  activity: number; // 1-4
+  mobility: number; // 1-4
+  nutrition: number; // 1-4
+  frictionShear: number; // 1-3
+  score: number;
+  riskLevel: 'No Risk' | 'Mild' | 'Moderate' | 'High' | 'Severe';
+  updatedAt: string;
 }
 
 export interface PressureCheck {
@@ -21,19 +37,28 @@ export interface PressureCheck {
   skinIntact: boolean;
   rednessPresence: boolean;
   repositioned: boolean;
-  braedenScore?: number; // Optional clinical score
+  braedenScore?: number; // Keep for backward compatibility
   notes: string;
   nurseInitials: string;
 }
 
-export interface MorseFallRisk {
-  historyOfFalls: boolean;     // Yes (25) | No (0)
-  secondaryDiagnosis: boolean;  // Yes (15) | No (0)
-  ambulatoryAid: 'none' | 'cane_walker' | 'furniture_clinging'; // None (0) | Cane/Walker (15) | Furniture (30)
-  ivTherapy: boolean;          // Yes (20) | No (0)
-  gait: 'normal' | 'weak' | 'impaired'; // Normal/Bedrest (0) | Weak (10) | Impaired (20)
-  mentalStatus: 'oriented' | 'overestimates'; // Oriented to ability (0) | Forgets limitations (15)
-  score: number;               // Automated total Morse score
+export interface FRATAssessment {
+  recentFalls: number; // 2, 4, 6, 8
+  medications: number; // 1, 2, 3, 4
+  psychological: number; // 1, 2, 3, 4
+  cognitiveStatus: number; // 1, 2, 3, 4
+  recentChangeMobility: boolean;
+  dizzinessPosturalHypotension: boolean;
+  checklistVision: boolean;
+  checklistMobility: boolean;
+  checklistTransfers: boolean;
+  checklistBehaviours: boolean;
+  checklistADLs: boolean;
+  checklistEnvironment: boolean;
+  checklistNutrition: boolean;
+  checklistContinence: boolean;
+  checklistOther: boolean;
+  score: number; // Out of 20
   riskLevel: 'Low' | 'Medium' | 'High';
   updatedAt: string;
 }
@@ -49,5 +74,7 @@ export interface Patient {
   admittedAt: string;
   vitals: VitalReading[];
   pressureChecks: PressureCheck[];
-  fallRisk: MorseFallRisk;
+  bradenAssessment?: BradenAssessment;
+  fallRisk?: any; // To preserve old Morse code structures if any
+  fratAssessment?: FRATAssessment;
 }
