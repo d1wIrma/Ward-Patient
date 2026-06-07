@@ -1,6 +1,7 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+"Final Assignment"
+This app is designed for nurses and doctors to document patients' vital signs and information in the hospital, presenting the data in a more visually appealing format to make hospital work during shifts easier. 
+It will provide health advice for abnormal vital signs but not a diagnosis tool using AI only, and replace professional medical decisions.
+
 
 # Run and deploy your AI Studio app
 
