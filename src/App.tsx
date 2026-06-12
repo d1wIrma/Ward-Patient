@@ -217,24 +217,9 @@ export default function App() {
     }
   };
 
-  // CLINICAL CORE HANDLERS
+   // CLINICAL CORE HANDLERS
   const handleAdmitPatient = (newDemographics: Omit<Patient, 'id' | 'vitals' | 'pressureChecks' | 'bradenAssessment' | 'fratAssessment'>) => {
     setIsProcessing(true);
-    const placeholderVitals: VitalReading = {
-      id: 'init-v-' + Date.now(),
-      timestamp: new Date().toISOString(),
-      heartRate: 80,
-      systolicBp: 120,
-      diastolicBp: 80,
-      temperature: 36.8,
-      respiratoryRate: 16,
-      spo2: 99,
-      supplementalO2: false,
-      levelOfConsciousness: 'A',
-      nzewsScore: 0,
-      nzewsZone: 'GREEN',
-      nurseInitials: 'ADM'
-    };
 
     const initialFrat: FRATAssessment = {
       recentFalls: 2,
@@ -282,7 +267,7 @@ export default function App() {
     const newPatientObj: Patient = {
       id: 'PAT-' + (patients.length + 100 + Date.now().toString().slice(-3)),
       ...newDemographics,
-      vitals: [placeholderVitals],
+      vitals: [],
       pressureChecks: [firstSkinCheck],
       bradenAssessment: initialBraden,
       fratAssessment: initialFrat,
@@ -1165,44 +1150,52 @@ export default function App() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-150">
-                        {activePatient.vitals.map(v => {
-                          const isReadingAbnormal = checkVitalsAbnormal(v);
-                          return (
-                            <tr key={v.id} className={`hover:bg-slate-50 font-mono text-[11px] transition ${isReadingAbnormal.isAbnormal ? 'bg-red-50/50 hover:bg-red-50 text-red-950 font-semibold' : 'text-slate-800'}`}>
-                              <td className="p-2.5 font-sans font-medium text-slate-600">
-                                {new Date(v.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })} &bull; {new Date(v.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                              </td>
-                              <td className="p-2.5 text-center font-bold">
-                                <span className={v.systolicBp > 140 || v.systolicBp < 90 ? 'text-red-650 underline decoration-dotted' : 'text-slate-900'}>
-                                  {v.systolicBp}/{v.diastolicBp}
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-center">
-                                <span className={v.heartRate > 100 || v.heartRate < 60 ? 'text-red-650 font-black' : 'text-slate-850'}>
-                                  {v.heartRate}
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-center">
-                                <span className={v.temperature > 37.8 || v.temperature < 36.0 ? 'text-red-650 font-black' : 'text-slate-850'}>
-                                  {v.temperature}°C
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-center">
-                                <span className={v.respiratoryRate > 20 || v.respiratoryRate < 12 ? 'text-red-750 font-black' : 'text-slate-850'}>
-                                  {v.respiratoryRate}
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-center">
-                                <span className={v.spo2 < 95 ? 'text-red-650 font-black underline' : 'text-[#1D529E]'}>
-                                  {v.spo2}%
-                                </span>
-                              </td>
-                              <td className="p-2.5 text-center font-sans uppercase font-bold text-slate-500">
-                                {v.nurseInitials}
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {activePatient.vitals.length === 0 ? (
+                          <tr>
+                            <td colSpan={7} className="p-4 text-center text-slate-400 italic">
+                              No clinical vital signs recorded for this patient yet. Use the "Record New Vitals" button to record clinical benchmarks.
+                            </td>
+                          </tr>
+                        ) : (
+                          activePatient.vitals.map(v => {
+                            const isReadingAbnormal = checkVitalsAbnormal(v);
+                            return (
+                              <tr key={v.id} className={`hover:bg-slate-50 font-mono text-[11px] transition ${isReadingAbnormal.isAbnormal ? 'bg-red-50/50 hover:bg-red-50 text-red-950 font-semibold' : 'text-slate-800'}`}>
+                                <td className="p-2.5 font-sans font-medium text-slate-600">
+                                  {new Date(v.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' })} &bull; {new Date(v.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </td>
+                                <td className="p-2.5 text-center font-bold">
+                                  <span className={v.systolicBp > 140 || v.systolicBp < 90 ? 'text-red-650 underline decoration-dotted' : 'text-slate-900'}>
+                                    {v.systolicBp}/{v.diastolicBp}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <span className={v.heartRate > 100 || v.heartRate < 60 ? 'text-red-650 font-black' : 'text-slate-850'}>
+                                    {v.heartRate}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <span className={v.temperature > 37.8 || v.temperature < 36.0 ? 'text-red-650 font-black' : 'text-slate-850'}>
+                                    {v.temperature}°C
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <span className={v.respiratoryRate > 20 || v.respiratoryRate < 12 ? 'text-red-750 font-black' : 'text-slate-850'}>
+                                    {v.respiratoryRate}
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center">
+                                  <span className={v.spo2 < 95 ? 'text-red-650 font-black underline' : 'text-[#1D529E]'}>
+                                    {v.spo2}%
+                                  </span>
+                                </td>
+                                <td className="p-2.5 text-center font-sans uppercase font-bold text-slate-500">
+                                  {v.nurseInitials}
+                                </td>
+                              </tr>
+                            );
+                          })
+                        )}
                       </tbody>
                     </table>
                   </div>
