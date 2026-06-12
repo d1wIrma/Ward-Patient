@@ -42,13 +42,94 @@ export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date('2026-06-07T06:54:35Z'));
 
   // Modals / forms visibility
-  const [activeModal, setActiveModal] = useState<'none' | 'admit' | 'log_vitals' | 'log_pressure' | 'assess_fall' | 'success'>('none');
+  const [activeModal, setActiveModal] = useState<'none' | 'admit' | 'log_vitals' | 'log_pressure' | 'assess_fall' | 'success' | 'confirm_undo'>('none');
   const [implementedRecs, setImplementedRecs] = useState<Record<string, boolean>>({});
   const [successMessage, setSuccessMessage] = useState('');
   const [isDischarging, setIsDischarging] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAIGuidelines, setShowAIGuidelines] = useState(false);
+
+  // Action History and Undo state
+  const [history, setHistory] = useState<{
+    id: string;
+    timestamp: string;
+    actionName: string;
+    patientsSnapshot: Patient[];
+    activeIdSnapshot: string;
+  }[]>(() => {
+    const cached = localStorage.getItem('clinical_ward_history');
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch (e) {
+        console.error("Failed to parse cached history logs, resetting", e);
+      }
+    }
+    return [];
+  });
+
+  // Save history to localStorage
+  useEffect(() => {
+    localStorage.setItem('clinical_ward_history', JSON.stringify(history));
+  }, [history]);
+
+  const pushToHistory = (actionName: string, prevPatients: Patient[], prevActiveId: string) => {
+    const newRecord = {
+      id: 'hist-' + Date.now() + Math.random().toString(36).slice(2, 6),
+      timestamp: new Date().toISOString(),
+      actionName,
+      patientsSnapshot: prevPatients,
+      activeIdSnapshot: prevActiveId,
+    };
+    setHistory(prev => {
+      const trimmed = [newRecord, ...prev];
+      return trimmed.slice(0, 15);
+    });
+  };
+
+  // Two witnesses signature states for clinical records rollback
+  const [undoTargetId, setUndoTargetId] = useState<string | null>(null);
+  const [signer1Name, setSigner1Name] = useState('');
+  const [signer1Role, setSigner1Role] = useState('Registered Nurse (RN)');
+  const [signer2Name, setSigner2Name] = useState('');
+  const [signer2Role, setSigner2Role] = useState('Enrolled Nurse (EN)');
+  const [witnessAgreement, setWitnessAgreement] = useState(false);
+
+  const handleUndoAction = (historyId?: string) => {
+    if (history.length === 0) return;
+    const targetId = historyId || history[0]?.id;
+    if (!targetId) return;
+    
+    setUndoTargetId(targetId);
+    setSigner1Name('');
+    setSigner1Role('Registered Nurse (RN)');
+    setSigner2Name('');
+    setSigner2Role('Enrolled Nurse (EN)');
+    setWitnessAgreement(false);
+    setActiveModal('confirm_undo');
+  };
+
+  const executeUndoAction = (targetId: string, w1Name: string, w1Role: string, w2Name: string, w2Role: string) => {
+    const targetIndex = history.findIndex(item => item.id === targetId);
+    if (targetIndex === -1) return;
+    
+    const targetRecord = history[targetIndex];
+    if (!targetRecord) return;
+    
+    const restoredPatients = targetRecord.patientsSnapshot;
+    const restoredActiveId = targetRecord.activeIdSnapshot;
+    
+    setPatients(restoredPatients);
+    if (restoredActiveId && restoredPatients.some(p => p.id === restoredActiveId)) {
+      setActivePatientId(restoredActiveId);
+    } else if (restoredPatients.length > 0) {
+      setActivePatientId(restoredPatients[0].id);
+    }
+    
+    setHistory(prev => prev.slice(targetIndex + 1));
+    showSuccessAlert(`Reverted: "${targetRecord.actionName}". Authorized & signed off by ${w1Name} (${w1Role}) and ${w2Name} (${w2Role}).`);
+  };
 
   // Save to localStorage on state changes
   useEffect(() => {
@@ -77,6 +158,7 @@ export default function App() {
       setIsResetting(true);
       setIsProcessing(true);
       setTimeout(() => {
+        pushToHistory("Restore Demonstration Baseline", patients, activePatientId);
         setPatients(initialPatients);
         setActivePatientId(initialPatients[0].id);
         setIsResetting(false);
@@ -208,6 +290,7 @@ export default function App() {
     };
 
     setTimeout(() => {
+      pushToHistory(`Admitted Patient: ${newPatientObj.name}`, patients, activePatientId);
       setPatients(prev => [newPatientObj, ...prev]);
       setActivePatientId(newPatientObj.id);
       setActiveModal('none');
@@ -227,6 +310,7 @@ export default function App() {
     } as VitalReading;
 
     setTimeout(() => {
+      pushToHistory(`Logged Vitals for ${activePatient.name}`, patients, activePatientId);
       setPatients(prev => prev.map(p => {
         if (p.id === activePatient.id) {
           return {
@@ -256,6 +340,7 @@ export default function App() {
     };
 
     setTimeout(() => {
+      pushToHistory(`Skin Turn & Repositioning for ${activePatient.name}`, patients, activePatientId);
       setPatients(prev => prev.map(p => {
         if (p.id === activePatient.id) {
           const updatedPatient = {
@@ -281,6 +366,7 @@ export default function App() {
     setIsProcessing(true);
 
     setTimeout(() => {
+      pushToHistory(`Falls Risk Assessment (FRAT) for ${activePatient.name}`, patients, activePatientId);
       setPatients(prev => prev.map(p => {
         if (p.id === activePatient.id) {
           return {
@@ -304,6 +390,7 @@ export default function App() {
       setIsDischarging(true);
       setIsProcessing(true);
       setTimeout(() => {
+        pushToHistory(`Discharged Patient: ${activePatient.name}`, patients, activePatientId);
         setPatients(prev => {
           const filtered = prev.filter(p => p.id !== activePatient.id);
           if (filtered.length > 0) {
@@ -699,6 +786,61 @@ export default function App() {
               })
             )}
           </div>
+
+          {/* ACTION ROLLBACK AUDIT TRAIL */}
+          <section id="ward-rollback-trail" className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3">
+            <div className="flex justify-between items-center pb-2 border-b border-slate-100">
+              <h3 className="text-xs font-black tracking-wider uppercase text-slate-700 flex items-center gap-1.5 select-none animate-none">
+                <RotateCcw className="h-4 w-4 text-[#1D529E]" />
+                Clinical Activity Trail
+              </h3>
+              {history.length > 0 && (
+                <button
+                  id="clear-history-btn"
+                  onClick={() => {
+                    if (window.confirm("Purge action history? These rollbacks will be permanently cleared from this device.")) {
+                      setHistory([]);
+                    }
+                  }}
+                  className="text-[9px] font-bold text-slate-400 hover:text-[#D11C42] hover:underline transition cursor-pointer"
+                >
+                  Purge Log
+                </button>
+              )}
+            </div>
+
+            {history.length === 0 ? (
+              <div className="text-center py-4 text-slate-400 text-[10.5px] italic leading-normal">
+                No ward state entries recorded in this session.
+              </div>
+            ) : (
+              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                {history.map((record, index) => (
+                  <div
+                    key={record.id}
+                    className="flex items-center justify-between p-2 rounded-lg border border-slate-100 bg-slate-50/70 hover:bg-slate-100/60 transition gap-2 group text-[10px]"
+                  >
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="font-bold text-slate-800 leading-tight block truncate">
+                        {record.actionName}
+                      </span>
+                      <span className="text-[9px] text-slate-400 font-mono mt-0.5">
+                        Log Clock: {new Date(record.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleUndoAction(record.id)}
+                      className="shrink-0 flex items-center gap-1 py-1 px-2.5 rounded bg-blue-50 hover:bg-[#1D529E] text-[#1D529E] hover:text-white border border-blue-100 hover:border-[#1D529E] font-bold text-[9.5px] transition shadow-xs cursor-pointer"
+                      title={index === 0 ? "Undo this action and revert state" : `Roll back all changes back to before: ${record.actionName}`}
+                    >
+                      <RotateCcw className="h-2.5 w-2.5" />
+                      {index === 0 ? "Undo" : "Revert"}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
         {/* RIGHT COLUMN - FOCUS PATIENT DOSSIER & WORKSPACE (8 cols) */}
         <div id="patient-dossier-section" className="lg:col-span-8 flex flex-col gap-6">
@@ -1566,8 +1708,9 @@ export default function App() {
                   {activeModal === 'log_pressure' && `Skin Turn & Pressure Care - ${activePatient?.name}`}
                   {activeModal === 'assess_fall' && (appVersion === 'current' ? 'Fall Risk Assessment' : 'Peninsula Health FRAT Assessment')}
                   {activeModal === 'success' && 'Clinical Action Completed'}
+                  {activeModal === 'confirm_undo' && 'Rollback Authorization Required'}
                 </h3>
-                {activePatient && activeModal !== 'admit' && activeModal !== 'success' && (
+                {activePatient && activeModal !== 'admit' && activeModal !== 'success' && activeModal !== 'confirm_undo' && (
                   <p className="text-[10px] text-slate-400 uppercase tracking-wider font-mono">
                     Bed {activePatient.bed} &bull; ID {activePatient.id}
                   </p>
@@ -1620,15 +1763,183 @@ export default function App() {
                 />
               )}
 
+              {activeModal === 'confirm_undo' && (() => {
+                const targetRecord = history.find(h => h.id === undoTargetId);
+                const actionDesc = targetRecord ? targetRecord.actionName : '';
+                const formatTime = targetRecord ? new Date(targetRecord.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+                const isFormValid = signer1Name.trim().length >= 2 && 
+                                    signer2Name.trim().length >= 2 && 
+                                    signer1Name.trim().toLowerCase() !== signer2Name.trim().toLowerCase() && 
+                                    witnessAgreement;
+
+                return (
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (isFormValid && undoTargetId) {
+                        executeUndoAction(undoTargetId, signer1Name.trim(), signer1Role, signer2Name.trim(), signer2Role);
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-850 space-y-1.5">
+                      <div className="flex gap-2 items-start font-bold text-xs">
+                        <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                        <div>
+                          <span>Regulatory Witness Verification Request</span>
+                        </div>
+                      </div>
+                      <p className="text-[10.5px] leading-relaxed text-slate-650 font-sans">
+                        Under ward record compliance, rolling back or modifying any submitted nursing records requires a confirmation and a dual-signature sign-off from two distinct practitioners.
+                      </p>
+                      <div className="bg-white border border-amber-100 rounded-lg p-2.5 mt-2 space-y-1">
+                        <div className="text-[10px] uppercase font-black tracking-wider text-slate-400">Target Action for Deletion</div>
+                        <div className="text-xs font-bold text-slate-800">{actionDesc || 'Last Recorded Action'}</div>
+                        <div className="text-[10px] font-mono text-slate-500">Record Clock: {formatTime}</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Signer 1 / First Worker */}
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-2.5">
+                        <div className="flex items-center gap-1.5 font-bold text-[11px] text-[#1D529E] uppercase tracking-wider">
+                          <span className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-[10px]">1</span>
+                          Lead Practitioner
+                        </div>
+                        
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">FullName / Initials</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Nurse Jane Doe"
+                            value={signer1Name}
+                            onChange={(e) => setSigner1Name(e.target.value)}
+                            className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-sans text-slate-800 focus:outline-[#1D529E]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Professional Role</label>
+                          <select
+                            value={signer1Role}
+                            onChange={(e) => setSigner1Role(e.target.value)}
+                            className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white text-slate-800"
+                          >
+                            <option>Registered Nurse (RN)</option>
+                            <option>Charge Nurse (CN)</option>
+                            <option>Enrolled Nurse (EN)</option>
+                            <option>Medical Practitioner</option>
+                            <option>Ward Supervisor</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Signer 2 / Second Worker */}
+                      <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/60 space-y-2.5">
+                        <div className="flex items-center gap-1.5 font-bold text-[11px] text-emerald-800 uppercase tracking-wider">
+                          <span className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center text-[10px]">2</span>
+                          Witness Professional
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">FullName / Initials</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Nurse Bob Smith"
+                            value={signer2Name}
+                            onChange={(e) => setSigner2Name(e.target.value)}
+                            className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white font-sans text-slate-800 focus:outline-[#1D529E]"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Professional Role</label>
+                          <select
+                            value={signer2Role}
+                            onChange={(e) => setSigner2Role(e.target.value)}
+                            className="w-full text-xs border border-slate-300 rounded-lg p-2 bg-white text-slate-800"
+                          >
+                            <option>Registered Nurse (RN)</option>
+                            <option>Charge Nurse (CN)</option>
+                            <option>Enrolled Nurse (EN)</option>
+                            <option>Medical Practitioner</option>
+                            <option>Clinical Witness</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Duplicate Names Warning */}
+                    {signer1Name.trim() && signer2Name.trim() && signer1Name.trim().toLowerCase() === signer2Name.trim().toLowerCase() && (
+                      <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-[10.5px] font-bold flex items-center gap-1.5 font-sans">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                        <span>Security Check: Workers 1 and 2 must be different clinicians. The same person cannot dual-sign.</span>
+                      </div>
+                    )}
+
+                    <div className="p-2 px-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-2 select-none">
+                      <input
+                        id="witness-agreement"
+                        type="checkbox"
+                        checked={witnessAgreement}
+                        onChange={(e) => setWitnessAgreement(e.target.checked)}
+                        className="mt-0.5 h-3.5 w-3.5 border-slate-300 rounded bg-white text-[#1D529E] focus:ring-[#1D529E]"
+                      />
+                      <label htmlFor="witness-agreement" className="text-[10.5px] font-medium text-slate-650 cursor-pointer leading-tight font-sans">
+                        I verify that both staff members listed above actively acknowledge and authorize this electronic record rollback under electronic audit regulations.
+                      </label>
+                    </div>
+
+                    <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => setActiveModal('none')}
+                        className="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-extrabold text-xs rounded-lg transition"
+                      >
+                        Cancel Reversion
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!isFormValid}
+                        className={`px-4 py-2 text-white font-extrabold text-xs rounded-lg transition flex items-center gap-1.5 ${
+                          isFormValid 
+                            ? 'bg-amber-600 hover:bg-amber-700 active:scale-95 cursor-pointer shadow-sm' 
+                            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <CheckSquare className="h-3.5 w-3.5" />
+                        Confirm Dual-Signed Rollback
+                      </button>
+                    </div>
+                  </form>
+                );
+              })()}
+
               {activeModal === 'success' && (
                 <div className="text-center py-6 text-slate-850 space-y-3">
                   <div className="mx-auto h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
                     <CheckSquare className="h-6 w-6" />
                   </div>
                   <h4 className="text-base font-bold text-slate-900">Bedside Registry Updated</h4>
-                  <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium leading-relaxed">
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto font-medium leading-relaxed font-sans">
                     {successMessage}
                   </p>
+                  
+                  {history.length > 0 && !successMessage.includes("Reverted:") && (
+                    <div className="pt-2">
+                      <button
+                        onClick={() => {
+                          handleUndoAction();
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 hover:text-amber-900 font-extrabold border border-amber-200 transition text-[11px] shadow-sm cursor-pointer select-none"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Undo Last Action
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
